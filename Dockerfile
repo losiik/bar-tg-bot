@@ -7,4 +7,3 @@ RUN pip install -r requirements.txt
 EXPOSE 9191
 
 CMD ["python", "-u", "manage.py", "runserver", "0:9191", "--insecure"]
-CMD ["python", "-u", "tg_bot/main.py"]
