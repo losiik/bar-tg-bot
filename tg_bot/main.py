@@ -25,7 +25,7 @@ class Review(StatesGroup):
 orders = {}
 
 
-async def check_data(chat_id):
+async def check_data(chat_id, bonus=0):
     text = 'Чек:\n\n'
     total_price = 0
 
@@ -38,7 +38,7 @@ async def check_data(chat_id):
 
         total_price += orders[chat_id]['order']['data'][key][1] * orders[chat_id]['order']['data'][key][0]
     text += '\n'
-    text += f'Итог: {total_price}'
+    text += f'Итог: {total_price - bonus}'
     return text
 
 
@@ -124,6 +124,26 @@ async def get_promo(message: types.Message):
     await message.answer(promo_text, parse_mode="Markdown")
 
 
+@dp.message_handler(text="Бонусная система")
+async def start_review(message: types.Message):
+    bonus_amount = 0
+
+    url = 'http://127.0.0.1:8000/api/client/'
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            bonus_response = await resp.read()
+
+    bonus_data = ast.literal_eval(bonus_response.decode('utf-8'))
+    for bonus in bonus_data['client_data']:
+        if bonus['user_id'] == str(message.from_user.id):
+            bonus_amount = bonus['bonus_amount']
+
+    bonus_text = 'При оплате заказа начисляется на бонусный счет 5% от суммы заказа\n'
+    bonus_text += f'\nНа вашем счету: {bonus_amount}'
+
+    await message.answer(bonus_text)
+
+
 @dp.message_handler(text="Оставить отзыв")
 async def start_review(message: types.Message):
     await message.answer("Напишите отзыв")
@@ -156,6 +176,55 @@ async def create_review(message: types.Message, state: FSMContext):
         await message.answer('Ваш отзыв сохранен успешно')
     else:
         await message.answer('Во время записи отзыва произошла ошибка. Попробуйте еще раз')
+
+
+@dp.callback_query_handler(text='use_bonus')
+async def use_bonus(callback_query: types.CallbackQuery):
+    bonus_amount = 0
+
+    url = 'http://127.0.0.1:8000/api/client/'
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            bonus_response = await resp.read()
+
+    bonus_data = ast.literal_eval(bonus_response.decode('utf-8'))
+    for bonus in bonus_data['client_data']:
+        if bonus['user_id'] == str(callback_query['from']['id']):
+            bonus_amount = bonus['bonus_amount']
+
+    chat_id = callback_query['from']['id']
+
+    await bot.edit_message_text(chat_id=chat_id,
+                                message_id=orders[chat_id]['order']['message_id'],
+                                text=await check_data(chat_id, bonus_amount),
+                                reply_markup=pay_keyboard)
+
+
+@dp.callback_query_handler(text='pay')
+async def pay(callback_query: types.CallbackQuery):
+    check = await check_data(callback_query['from']['id'])
+    amount = check.split('Итог: ')[1]
+    print(amount)
+
+    url = 'http://127.0.0.1:8000/api/order/'
+
+    order_data = {
+        'user_id': callback_query['from']['id'],
+        'order_data': check,
+        'amount': float(amount),
+        'data': datetime.datetime.now()
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=order_data) as resp:
+            order_response = await resp.read()
+
+    order_response = order_response.decode("utf-8")
+
+    if order_response == '"order saved successful"':
+        await bot.send_message(callback_query['from']['id'], 'Заказ оплачен успешно')
+    else:
+        await bot.send_message(callback_query['from']['id'], 'Во время оплаты заказа произошла ошибка')
 
 
 @dp.callback_query_handler(lambda call: True)
