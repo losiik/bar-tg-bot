@@ -50,7 +50,7 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(text="Меню")
 async def get_menu(message: types.Message):
-    print(os.getcwd().replace('/tg_bot', ''))
+    img_path = os.getcwd().replace('/tg_bot', '')
     menu_text = ''
     category = {
         'ALCO': 'Алкогольные напитки',
@@ -88,7 +88,7 @@ async def get_menu(message: types.Message):
         menu_text += menu_param['price'] + ' руб.' + '\n'
         menu_text += f"*Подробное описание:*" + '\n'
         menu_text += menu_param['description'] + '\n'
-        photo = open(f"../{menu_param['photo']}", 'rb')
+        photo = open(f"{img_path}/{menu_param['photo']}", 'rb')
 
         add_to_order = types.InlineKeyboardMarkup()
         add_to_order_btn_add = types.InlineKeyboardButton('+', callback_data=f"add_{menu_param['title']}")
