@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from aiogram import types
 from aiogram import Bot, Dispatcher
@@ -49,6 +50,7 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(text="Меню")
 async def get_menu(message: types.Message):
+    print(os.getcwd().replace('/tg_bot', ''))
     menu_text = ''
     category = {
         'ALCO': 'Алкогольные напитки',
