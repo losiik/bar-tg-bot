@@ -63,7 +63,7 @@ async def get_menu(message: types.Message):
         'M': 'мл.',
     }
 
-    url = 'http://127.0.0.1:8000/api/menu/'
+    url = 'http://146.185.209.31:9191/api/menu/'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             menu_response = await resp.read()
@@ -110,7 +110,7 @@ async def get_menu(message: types.Message):
 async def get_promo(message: types.Message):
     promo_text = ''
 
-    url = 'http://127.0.0.1:8000/api/promo/'
+    url = 'http://146.185.209.31:9191/api/promo/'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             promo_response = await resp.read()
@@ -128,7 +128,7 @@ async def get_promo(message: types.Message):
 async def start_review(message: types.Message):
     bonus_amount = 0
 
-    url = 'http://127.0.0.1:8000/api/client/'
+    url = 'http://146.185.209.31:9191/api/client/'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             bonus_response = await resp.read()
@@ -159,7 +159,7 @@ async def create_review(message: types.Message, state: FSMContext):
     review = await state.get_data()
     review = review['review']
 
-    url = 'http://127.0.0.1:8000/api/review/'
+    url = 'http://146.185.209.31:9191/api/review/'
 
     review_data = {
         'from_username': message.from_user.first_name,
@@ -182,7 +182,7 @@ async def create_review(message: types.Message, state: FSMContext):
 async def use_bonus(callback_query: types.CallbackQuery):
     bonus_amount = 0
 
-    url = 'http://127.0.0.1:8000/api/client/'
+    url = 'http://146.185.209.31:9191/api/client/'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             bonus_response = await resp.read()
@@ -206,7 +206,7 @@ async def pay(callback_query: types.CallbackQuery):
     amount = check.split('Итог: ')[1]
     print(amount)
 
-    url = 'http://127.0.0.1:8000/api/order/'
+    url = 'http://146.185.209.31:9191/api/order/'
 
     order_data = {
         'user_id': callback_query['from']['id'],
